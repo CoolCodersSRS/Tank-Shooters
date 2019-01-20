@@ -1,10 +1,12 @@
 import pygame
 import random
 import math
+from PodSixNet.Connection import ConnectionListener, connection
+from time import sleep
 from TankClassDefintions import *
 from TankSettings import *
 
-class Game:
+class Game(ConnectionListener):
     def __init__(self):
         pygame.init()
         pygame.mixer.init()
@@ -12,6 +14,8 @@ class Game:
         pygame.display.set_caption(TITLE)
         self.clock = pygame.time.Clock()
         self.running = True
+        self.Connect(('127.0.0.1', 8080))
+        self.angleb = 0
 
     def run(self):
         self.playing = True
@@ -22,6 +26,8 @@ class Game:
             self.draw()
 
     def update(self):
+        connection.Pump()
+        self.Pump()
         self.sprl.update()
         if self.player.vel.y > 0:
             collide = pygame.sprite.spritecollide(self.player,self.platforms, False)
@@ -39,8 +45,10 @@ class Game:
                 self.running = False
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
-                    self.bullet = Bullet(self,1,self.player.nozzle.pos - (20,20),0-self.player.nozzle.angle)
-                    self.sprl.add(self.bullet)
+                    if len(self.bullets) < 2:
+                        self.bullet = Bullet(self,1,self.player.nozzle.pos - (20,20),self.angleb)
+                        self.bullets.add(self.bullet)
+                        self.sprl.add(self.bullet)
                 if event.key == pygame.K_UP:
                     self.player.jump()
 
@@ -52,6 +60,7 @@ class Game:
     def new_game(self):
         self.kills = 0
         self.platforms = pygame.sprite.Group()
+        self.bullets = pygame.sprite.Group()
         self.sprl = pygame.sprite.Group()
         self.player = Player(self,self.sprl)
         ground = Platform(0,HEIGHT - 40,WIDTH,40)
@@ -79,7 +88,7 @@ g = Game()
 g.showstartscreen()
 while g.running:
     g.new_game()
-    if not self.playing:
+    if not g.playing:
         g.showgameoverscreen()
 pygame.quit()
                 
